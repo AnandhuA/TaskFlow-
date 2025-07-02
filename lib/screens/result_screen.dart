@@ -52,6 +52,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
     await HiveRepo().saveTask(taskToSave);
 
+    Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Selected tasks saved to Hive!"),
@@ -87,8 +88,8 @@ class _ResultScreenState extends State<ResultScreen> {
         child: ListView.builder(
           itemCount: widget.parsedTask.subtasks.length,
           itemBuilder: (context, index) {
-            final sub = widget.parsedTask.subtasks[index];
             final wrapper = _wrappedTasks[index];
+            final sub = wrapper.subtask;
             return Card(
               elevation: 2,
               margin: const EdgeInsets.symmetric(vertical: 6),
@@ -100,13 +101,14 @@ class _ResultScreenState extends State<ResultScreen> {
                     Row(
                       children: [
                         Checkbox(
-                          value: sub.completed,
+                          value: wrapper.selected,
                           onChanged: (val) {
                             setState(() {
                               wrapper.selected = val ?? false;
                             });
                           },
                         ),
+
                         Expanded(
                           child: Text(
                             '${sub.title} (${sub.priority})',

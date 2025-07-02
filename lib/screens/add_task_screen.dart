@@ -4,14 +4,14 @@ import 'package:lottie/lottie.dart';
 import 'package:task_flow/bloc/chat/chat_cubit.dart';
 import 'package:task_flow/screens/result_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class AddTaskScreen extends StatefulWidget {
+  const AddTaskScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<AddTaskScreen> createState() => _AddTaskScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _AddTaskScreenState extends State<AddTaskScreen> {
   final TextEditingController _taskController = TextEditingController();
 
   @override
@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text("TaskFlow"),
+        title: const Text("AddTask"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
