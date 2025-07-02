@@ -1,10 +1,8 @@
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:task_flow/core/key.dart';
-import 'package:task_flow/core/urls.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
+import 'package:task_flow/bloc/chat/chat_cubit.dart';
+import 'package:task_flow/screens/result_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,92 +13,119 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _taskController = TextEditingController();
-  String _response = '';
-  bool _isLoading = false;
-  Future<void> _generateSubTasks() async {
-    final String task = _taskController.text.trim();
-    if (task.isEmpty) return;
-
-    setState(() {
-      _isLoading = true;
-      _response = '';
-    });
-
-    try {
-      final res = await http.post(
-        Uri.parse(Urls.url),
-        headers: {
-          'Authorization': 'Bearer $apiKey2',
-          'Content-Type': 'application/json',
-          'HTTP-Referer':
-              'https://taskflow.app',
-          'X-Title': 'TaskFlow',
-        },
-        body: jsonEncode({
-          "model": "mistralai/mistral-7b-instruct",
-          "messages": [
-            {
-              "role": "system",
-              "content":
-                  "You are an assistant that helps users break down tasks into subtasks with priority.",
-            },
-            {
-              "role": "user",
-              "content": "Split and prioritize this task: $task",
-            },
-          ],
-          "temperature": 0.7,
-        }),
-      );
-
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final content = data['choices'][0]['message']['content'];
-        log(content);
-        setState(() => _response = content);
-      } else {
-        log(res.body);
-        setState(() => _response = 'Error: ${res.body}');
-      }
-    } catch (e) {
-      log(e.toString());
-      setState(() => _response = 'Error: $e');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: const Text("TaskFlow"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
               controller: _taskController,
+              minLines: 1,
+              maxLines: 10,
               decoration: const InputDecoration(
                 labelText: 'Enter a task',
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _isLoading ? null : _generateSubTasks,
-              icon: const Icon(Icons.play_arrow),
-              label: const Text("Go"),
-            ),
-            const SizedBox(height: 16),
-            _isLoading
-                ? const CircularProgressIndicator()
-                : Expanded(
-                    child: SingleChildScrollView(
-                      child: Text(
-                        _response,
-                        style: const TextStyle(fontSize: 16),
+            const SizedBox(height: 15),
+            BlocConsumer<ChatCubit, ChatState>(
+              listener: (context, state) {
+                //---------- chat loaded state ----------------
+                if (state is ChatLoadedState) {
+                  if (state.resultModel.taskPlan != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ResultScreen(
+                          parsedTask: state.resultModel.taskPlan!,
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        duration: Duration(milliseconds: 500),
+                        content: Text(
+                          "Failed to parse task response.",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
+                }
+                // ------------ chat error state -------------
+                else if (state is ChatErrorState) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      duration: Duration(milliseconds: 500),
+                      content: Text(
+                        state.resultModel.errorMessage,
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                if (state is ChatLoadingState) {
+                  return TextButton(
+                    onPressed: () {},
+                    style: TextButton.styleFrom(
+                      minimumSize: Size(70, 40),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadiusGeometry.circular(5),
                       ),
                     ),
+                    child: Lottie.asset(
+                      "assets/animations/loading.json",
+                      height: 30,
+                      width: 20,
+                    ),
+                  );
+                }
+                return TextButton(
+                  onPressed: () {
+                    if (_taskController.text.isNotEmpty) {
+                      context.read<ChatCubit>().chatButtonClick(
+                        task: _taskController.text,
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          duration: Duration(milliseconds: 500),
+                          content: Text(
+                            "Type Task.....",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    minimumSize: Size(70, 40),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadiusGeometry.circular(5),
+                    ),
                   ),
+                  child: Text("Go", style: TextStyle(color: Colors.black)),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
