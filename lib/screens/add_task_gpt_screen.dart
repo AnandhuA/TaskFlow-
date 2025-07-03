@@ -4,14 +4,14 @@ import 'package:lottie/lottie.dart';
 import 'package:task_flow/bloc/chat/chat_cubit.dart';
 import 'package:task_flow/screens/result_screen.dart';
 
-class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+class AddTaskGptScreen extends StatefulWidget {
+  const AddTaskGptScreen({super.key});
 
   @override
-  State<AddTaskScreen> createState() => _AddTaskScreenState();
+  State<AddTaskGptScreen> createState() => _AddTaskGptScreenState();
 }
 
-class _AddTaskScreenState extends State<AddTaskScreen> {
+class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
   final TextEditingController _taskController = TextEditingController();
 
   @override
@@ -26,7 +26,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text("AddTask"),
+        title: const Text("AddTask-Gpt"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

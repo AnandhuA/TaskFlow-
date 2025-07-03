@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:task_flow/screens/add_task_screen.dart';
+import 'package:task_flow/screens/add_task.dart';
+import 'package:task_flow/screens/add_task_gpt_screen.dart';
 import 'package:task_flow/screens/my_task_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -46,7 +47,7 @@ class _MainScreenState extends State<MainScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children: const [AddTaskScreen(), MyTaskScreen()],
+        children: const [MyTaskScreen(), AddTask(), AddTaskGptScreen()],
       ),
       bottomNavigationBar: Container(
         color: Colors.black,
@@ -61,8 +62,9 @@ class _MainScreenState extends State<MainScreen> {
           selectedIndex: _selectedIndex,
           onTabChange: _onTabChanged,
           tabs: const [
-            GButton(icon: Icons.home, text: 'Home'),
             GButton(icon: Icons.task_alt, text: 'My Tasks'),
+            GButton(icon: Icons.add_circle_outline_sharp, text: 'Add Tasks'),
+            GButton(icon: Icons.gpp_good_outlined, text: 'Gpt'),
           ],
         ),
       ),

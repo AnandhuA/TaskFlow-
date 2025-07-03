@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:task_flow/data/hive_repo.dart';
 import 'package:task_flow/models/task_model.dart';
+import 'package:task_flow/widgets/bottom_sheet.dart';
 
 class ViewTaskScreen extends StatefulWidget {
   final TaskPlan task;
@@ -64,6 +67,36 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: Text(widget.task.title),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => AddSubTaskSheet(
+                  onSubtaskAdded: (subtask) async {
+                    setState(() {
+                      subtasks.insert(0, subtask);
+                      _expandedStates.insert(0, false);
+                    });
+                    await _updateTaskInHive();
+                  },
+                ),
+              );
+            },
+            style: TextButton.styleFrom(
+              minimumSize: Size(70, 40),
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadiusGeometry.circular(5),
+              ),
+            ),
+            icon: Icon(Icons.add, color: Colors.black),
+            label: Text("New Task", style: TextStyle(color: Colors.black)),
+          ),
+          SizedBox(width: 20),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -110,7 +143,7 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      '${sub.title} (${sub.priority})',
+                      sub.title,
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
