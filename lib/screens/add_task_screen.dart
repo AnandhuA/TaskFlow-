@@ -15,6 +15,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final TextEditingController _taskController = TextEditingController();
 
   @override
+  void dispose() {
+    super.dispose();
+    _taskController.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
@@ -31,9 +37,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               controller: _taskController,
               minLines: 1,
               maxLines: 10,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Enter a task',
                 border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Colors.grey),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(5),
+
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
               ),
             ),
             const SizedBox(height: 15),
@@ -42,6 +57,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 //---------- chat loaded state ----------------
                 if (state is ChatLoadedState) {
                   if (state.resultModel.taskPlan != null) {
+                    _taskController.clear();
                     Navigator.push(
                       context,
                       MaterialPageRoute(

@@ -5,15 +5,23 @@ class HiveRepo {
   final Box<TaskPlan> _taskBox = Hive.box<TaskPlan>('taskPlans');
 
   Future<void> saveTask(TaskPlan taskPlan) async {
-    await _taskBox.add(taskPlan);
+    await _taskBox.put(taskPlan.id, taskPlan);
   }
 
   List<TaskPlan> getAllTasks() {
     return _taskBox.values.toList();
   }
 
-  Future<void> deleteTask(int index) async {
-    await _taskBox.deleteAt(index);
+  TaskPlan? getTaskById(String id) {
+    return _taskBox.get(id);
+  }
+
+  Future<void> updateTask(String id, TaskPlan updatedTask) async {
+    await _taskBox.put(id, updatedTask);
+  }
+
+  Future<void> deleteTask(String id) async {
+    await _taskBox.delete(id);
   }
 
   Future<void> clearAll() async {

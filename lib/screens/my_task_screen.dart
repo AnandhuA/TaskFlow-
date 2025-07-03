@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:task_flow/data/hive_repo.dart';
 import 'package:task_flow/models/task_model.dart';
+import 'package:task_flow/screens/view_task_screen.dart';
 
 class MyTaskScreen extends StatelessWidget {
   const MyTaskScreen({super.key});
@@ -35,30 +38,40 @@ class MyTaskScreen extends StatelessWidget {
             itemCount: tasks.length,
             itemBuilder: (context, index) {
               final task = tasks[index];
-
-              return Card(
-                color: Colors.grey[850],
-                margin: const EdgeInsets.all(10),
-                child: ListTile(
-                  title: Text(
-                    task.title,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Subtasks: ${task.subtasks.length}",
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      Text(
-                        "Saved on: ${task.createdAt}",
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
+              log("title:::${task.title}");
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewTaskScreen(task: task),
+                    ),
+                  );
+                },
+                child: Card(
+                  color: Colors.grey[850],
+                  margin: const EdgeInsets.all(10),
+                  child: ListTile(
+                    title: Text(
+                      task.title,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Subtasks: ${task.subtasks.length}",
+                          style: const TextStyle(color: Colors.grey),
                         ),
-                      ),
-                    ],
+                        Text(
+                          "Saved on: ${task.createdAt}",
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

@@ -1,4 +1,5 @@
 import 'package:task_flow/models/task_model.dart';
+import 'package:uuid/uuid.dart';
 
 TaskPlan parseAiResponse(String rawText) {
   final lines = rawText.trim().split('\n');
@@ -16,11 +17,9 @@ TaskPlan parseAiResponse(String rawText) {
       taskTitle = line.replaceFirst('Task:', '').trim();
     } else if (RegExp(r'^\d+\.\s').hasMatch(line)) {
       if (currentTitle != null) {
-        subtasks.add(SubTask(
-          title: currentTitle,
-          priority: priority,
-          steps: currentSteps,
-        ));
+        subtasks.add(
+          SubTask(title: currentTitle, priority: priority, steps: currentSteps),
+        );
       }
 
       final priorityMatch = RegExp(r'\[(High|Medium|Low)\]').firstMatch(line);
@@ -36,12 +35,10 @@ TaskPlan parseAiResponse(String rawText) {
   }
 
   if (currentTitle != null) {
-    subtasks.add(SubTask(
-      title: currentTitle,
-      priority: priority,
-      steps: currentSteps,
-    ));
+    subtasks.add(
+      SubTask(title: currentTitle, priority: priority, steps: currentSteps),
+    );
   }
 
-  return TaskPlan(title: taskTitle, subtasks: subtasks);
+  return TaskPlan(title: taskTitle, subtasks: subtasks, id: const Uuid().v4());
 }

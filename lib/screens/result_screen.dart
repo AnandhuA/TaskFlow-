@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:task_flow/data/hive_repo.dart';
 import 'package:task_flow/models/task_model.dart';
+import 'package:uuid/uuid.dart';
 
 class ResultScreen extends StatefulWidget {
   final TaskPlan parsedTask;
@@ -45,6 +46,7 @@ class _ResultScreenState extends State<ResultScreen> {
     }
 
     final taskToSave = TaskPlan(
+      id: const Uuid().v4(),
       title: widget.parsedTask.title,
       subtasks: selected,
       createdAt: DateTime.now(),
@@ -95,39 +97,46 @@ class _ResultScreenState extends State<ResultScreen> {
               margin: const EdgeInsets.symmetric(vertical: 6),
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: wrapper.selected,
-                          onChanged: (val) {
-                            setState(() {
-                              wrapper.selected = val ?? false;
-                            });
-                          },
-                        ),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      wrapper.selected = !wrapper.selected;
+                    });
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: wrapper.selected,
+                            onChanged: (val) {
+                              setState(() {
+                                wrapper.selected = val ?? false;
+                              });
+                            },
+                          ),
 
-                        Expanded(
-                          child: Text(
-                            '${sub.title} (${sub.priority})',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                          Expanded(
+                            child: Text(
+                              '${sub.title} (${sub.priority})',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    ...sub.steps.map(
-                      (step) => Padding(
-                        padding: const EdgeInsets.only(left: 16.0, bottom: 4),
-                        child: Text('- $step'),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      ...sub.steps.map(
+                        (step) => Padding(
+                          padding: const EdgeInsets.only(left: 16.0, bottom: 4),
+                          child: Text('- $step'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

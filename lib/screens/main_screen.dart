@@ -12,16 +12,45 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  late PageController _pageController;
 
-  final List<Widget> _screens = [const AddTaskScreen(), const MyTaskScreen()];
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _selectedIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  void _onTabChanged(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        children: const [AddTaskScreen(), MyTaskScreen()],
+      ),
       bottomNavigationBar: Container(
         color: Colors.black,
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
         child: GNav(
           backgroundColor: Colors.black,
           color: Colors.grey[400],
@@ -30,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
           gap: 8,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           selectedIndex: _selectedIndex,
-          onTabChange: (index) => setState(() => _selectedIndex = index),
+          onTabChange: _onTabChanged,
           tabs: const [
             GButton(icon: Icons.home, text: 'Home'),
             GButton(icon: Icons.task_alt, text: 'My Tasks'),

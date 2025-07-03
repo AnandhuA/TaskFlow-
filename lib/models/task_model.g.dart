@@ -17,21 +17,24 @@ class TaskPlanAdapter extends TypeAdapter<TaskPlan> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return TaskPlan(
-      title: fields[0] as String,
-      subtasks: (fields[1] as List).cast<SubTask>(),
-      createdAt: fields[2] as DateTime?,
+      id: fields[0] as String,
+      title: fields[1] as String,
+      subtasks: (fields[2] as List).cast<SubTask>(),
+      createdAt: fields[3] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, TaskPlan obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
-      ..write(obj.title)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.subtasks)
+      ..write(obj.title)
       ..writeByte(2)
+      ..write(obj.subtasks)
+      ..writeByte(3)
       ..write(obj.createdAt);
   }
 
