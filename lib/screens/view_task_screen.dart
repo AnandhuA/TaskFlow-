@@ -155,19 +155,20 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      _expandedStates[index]
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: Colors.white,
+                  if (sub.steps.isNotEmpty)
+                    IconButton(
+                      icon: Icon(
+                        _expandedStates[index]
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _expandedStates[index] = !_expandedStates[index];
+                        });
+                      },
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _expandedStates[index] = !_expandedStates[index];
-                      });
-                    },
-                  ),
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.white),
                     color: Colors.grey[900],

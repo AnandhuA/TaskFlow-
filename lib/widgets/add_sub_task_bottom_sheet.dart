@@ -42,7 +42,7 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Container(
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade700),
+            border: const Border(top: BorderSide(color: Colors.grey, width: 1)),
             color: Colors.black.withOpacity(0.3),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           ),
@@ -70,7 +70,7 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
                       hintText: 'Subtask Title',
                       hintStyle: const TextStyle(color: Colors.grey),
                       filled: true,
-                      fillColor: Colors.grey[800],
+                      fillColor: Colors.grey[900],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -78,7 +78,7 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
                         borderSide: BorderSide(color: Colors.white),
                       ),
                     ),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 12),
                   // DropdownButtonFormField<String>(
@@ -111,7 +111,7 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
                             hintText: 'Add a Step',
                             hintStyle: const TextStyle(color: Colors.white70),
                             filled: true,
-                            fillColor: Colors.grey[800],
+                            fillColor: Colors.grey[900],
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),

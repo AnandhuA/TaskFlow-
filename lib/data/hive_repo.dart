@@ -4,6 +4,14 @@ import 'package:task_flow/models/task_model.dart';
 class HiveRepo {
   final Box<TaskPlan> _taskBox = Hive.box<TaskPlan>('taskPlans');
 
+  Future<void> reorderTasks(List<TaskPlan> reorderedTasks) async {
+    final box = Hive.box<TaskPlan>('taskPlans');
+    await box.clear();
+    for (var task in reorderedTasks) {
+      await box.put(task.id, task);
+    }
+  }
+
   Future<void> saveTask(TaskPlan taskPlan) async {
     await _taskBox.put(taskPlan.id, taskPlan);
   }

@@ -12,155 +12,41 @@ class AddTask extends StatefulWidget {
 
 class _AddTaskState extends State<AddTask> {
   final TextEditingController taskTitleController = TextEditingController();
-  final List<SubTask> subtasks = [];
 
-  void _addSubTaskDialog() {
-    final subTitleController = TextEditingController();
-    final stepController = TextEditingController();
-    List<String> steps = [];
-    String priority = 'Medium';
+  final TextEditingController subTitleController = TextEditingController();
+  final TextEditingController stepController = TextEditingController();
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.black.withOpacity(0.6),
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => StatefulBuilder(
-        builder: (context, setState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: subTitleController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: "Subtask title",
-                    hintStyle: const TextStyle(color: Colors.white70),
-                    filled: true,
-                    fillColor: Colors.grey[800],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: priority,
-                  items: ['High', 'Medium', 'Low']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (val) =>
-                      setState(() => priority = val ?? 'Medium'),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.grey[800],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    labelText: 'Priority',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                  ),
-                  dropdownColor: Colors.grey[900],
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: stepController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText: 'Add a Step',
-                          hintStyle: const TextStyle(color: Colors.white70),
-                          filled: true,
-                          fillColor: Colors.grey[800],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add, color: Colors.black),
-                      onPressed: () {
-                        if (stepController.text.trim().isNotEmpty) {
-                          setState(() {
-                            steps.add(stepController.text.trim());
-                            stepController.clear();
-                          });
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: steps
-                      .map(
-                        (step) => Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  "- $step",
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.close,
-                                  size: 18,
-                                  color: Colors.redAccent,
-                                ),
-                                onPressed: () {
-                                  setState(() => steps.remove(step));
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                  ),
-                  onPressed: () {
-                    if (subTitleController.text.trim().isEmpty) return;
+  List<SubTask> subtasks = [];
+  List<String> steps = [];
+  String priority = 'Medium';
 
-                    final sub = SubTask(
-                      title: subTitleController.text.trim(),
-                      priority: priority,
-                      steps: steps,
-                      completed: false,
-                    );
+  void _addStep() {
+    final text = stepController.text.trim();
+    if (text.isNotEmpty) {
+      setState(() {
+        steps.add(text);
+        stepController.clear();
+      });
+    }
+  }
 
-                    setState(() {
-                      subtasks.add(sub);
-                    });
+  void _addSubtask() {
+    final title = subTitleController.text.trim();
+    if (title.isEmpty) return;
 
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Add Subtask"),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    final sub = SubTask(
+      title: title,
+      priority: priority,
+      steps: List<String>.from(steps),
+      completed: false,
     );
+
+    setState(() {
+      subtasks.add(sub);
+      subTitleController.clear();
+      steps.clear();
+      priority = 'Medium';
+    });
   }
 
   Future<void> _saveTask() async {
@@ -183,8 +69,13 @@ class _AddTaskState extends State<AddTask> {
     );
 
     await HiveRepo().saveTask(newTask);
+    taskTitleController.clear();
+    subTitleController.clear();
+    stepController.clear();
 
-    Navigator.pop(context);
+    setState(() {
+      subtasks = [];
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Task added successfully!"),
@@ -202,72 +93,176 @@ class _AddTaskState extends State<AddTask> {
         title: const Text("Add Task"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.check, color: Colors.green),
+            icon: const Icon(Icons.check, color: Colors.white),
             onPressed: _saveTask,
           ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: ListView(
           children: [
+            // Task title
             TextField(
               controller: taskTitleController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: "Enter task title",
-                hintStyle: const TextStyle(color: Colors.white70),
+                hintStyle: const TextStyle(color: Colors.grey),
                 filled: true,
-                fillColor: Colors.grey[800],
+                fillColor: Colors.grey[900],
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              onPressed: _addSubTaskDialog,
-              icon: const Icon(Icons.add),
-              label: const Text("Add Subtask"),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: subtasks.length,
-                itemBuilder: (_, index) {
-                  final sub = subtasks[index];
-                  return Card(
-                    color: Colors.grey[850],
-                    child: ListTile(
-                      title: Text(
-                        '${sub.title} (${sub.priority})',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: sub.steps
-                            .map(
-                              (step) => Text(
-                                "- $step",
-                                style: const TextStyle(color: Colors.white70),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            subtasks.removeAt(index);
-                          });
-                        },
-                      ),
-                    ),
-                  );
-                },
+
+            // Subtask title input
+            TextField(
+              controller: subTitleController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Subtask title",
+                hintStyle: const TextStyle(color: Colors.grey),
+                filled: true,
+                fillColor: Colors.grey[900],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
+            const SizedBox(height: 12),
+
+            // // Priority dropdown
+            // DropdownButtonFormField<String>(
+            //   value: priority,
+            //   items: [
+            //     'High',
+            //     'Medium',
+            //     'Low',
+            //   ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            //   onChanged: (val) => setState(() => priority = val ?? 'Medium'),
+            //   decoration: InputDecoration(
+            //     filled: true,
+            //     fillColor: Colors.grey[800],
+            //     border: OutlineInputBorder(
+            //       borderRadius: BorderRadius.circular(8),
+            //     ),
+            //     labelText: 'Priority',
+            //     labelStyle: const TextStyle(color: Colors.white70),
+            //   ),
+            //   dropdownColor: Colors.grey[900],
+            //   style: const TextStyle(color: Colors.white),
+            // ),
+            const SizedBox(height: 12),
+
+            // Step input row
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: stepController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Add a Step',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Colors.grey[900],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _addStep,
+                  icon: Icon(Icons.add, color: Colors.white),
+                ),
+              ],
+            ),
+
+            // Step list preview
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: steps
+                  .map(
+                    (step) => Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              "- $step",
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.redAccent,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              setState(() => steps.remove(step));
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 12),
+
+            // Add subtask button
+            ElevatedButton.icon(
+              onPressed: _addSubtask,
+              icon: const Icon(Icons.add, color: Colors.black),
+              label: const Text(
+                "Add Subtask",
+                style: TextStyle(color: Colors.black),
+              ),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            ),
+            const SizedBox(height: 24),
+
+            // Subtask list
+            const Text("Subtasks", style: TextStyle(color: Colors.black)),
+            const SizedBox(height: 8),
+            ...subtasks.asMap().entries.map((entry) {
+              final index = entry.key;
+              final sub = entry.value;
+              return Card(
+                color: Colors.grey[900],
+                child: ListTile(
+                  title: Text(
+                    '${sub.title} (${sub.priority})',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: sub.steps
+                        .map(
+                          (s) => Text(
+                            "- $s",
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.red),
+                    onPressed: () {
+                      setState(() {
+                        subtasks.removeAt(index);
+                      });
+                    },
+                  ),
+                ),
+              );
+            }),
           ],
         ),
       ),

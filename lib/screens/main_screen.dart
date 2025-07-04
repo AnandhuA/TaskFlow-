@@ -47,11 +47,11 @@ class _MainScreenState extends State<MainScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children:  [MyTaskScreen(), AddTask(), AddTaskGptScreen()],
+        children: [MyTaskScreen(), AddTask(), AddTaskGptScreen()],
       ),
       bottomNavigationBar: Container(
         color: Colors.black,
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+        padding: const EdgeInsets.only(left: 30, right: 30, bottom: 15),
         child: GNav(
           backgroundColor: Colors.black,
           color: Colors.grey[400],
@@ -63,7 +63,7 @@ class _MainScreenState extends State<MainScreen> {
           onTabChange: _onTabChanged,
           tabs: const [
             GButton(icon: Icons.task_alt, text: 'My Tasks'),
-            GButton(icon: Icons.add_circle_outline_sharp, text: 'Add Tasks'),
+            GButton(icon: Icons.add_circle_outline_sharp, text: 'Add Task'),
             GButton(icon: Icons.gpp_good_outlined, text: 'Gpt'),
           ],
         ),
