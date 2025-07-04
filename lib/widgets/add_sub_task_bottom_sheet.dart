@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:task_flow/models/task_model.dart';
 
 class AddSubTaskSheet extends StatefulWidget {
-  final Function(SubTask) onSubtaskAdded;
+  final SubTask? existingSubTask;
+  final Function(SubTask) onSubtaskSaved;
 
-  const AddSubTaskSheet({super.key, required this.onSubtaskAdded});
+  const AddSubTaskSheet({
+    super.key,
+    this.existingSubTask,
+    required this.onSubtaskSaved,
+  });
 
   @override
   State<AddSubTaskSheet> createState() => _AddSubTaskSheetState();
@@ -19,14 +24,26 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
   List<String> steps = [];
 
   @override
+  void initState() {
+    super.initState();
+
+    if (widget.existingSubTask != null) {
+      titleController.text = widget.existingSubTask!.title;
+      priority = widget.existingSubTask!.priority;
+      steps = List<String>.from(widget.existingSubTask!.steps);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
+            border: Border.all(color: Colors.grey.shade700),
+            color: Colors.black.withOpacity(0.3),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           ),
           child: SizedBox(
@@ -36,9 +53,11 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Add New Subtask',
-                    style: TextStyle(
+                  Text(
+                    widget.existingSubTask != null
+                        ? 'Edit Subtask'
+                        : 'Add New Subtask',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -47,7 +66,6 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: titleController,
-
                     decoration: InputDecoration(
                       hintText: 'Subtask Title',
                       hintStyle: const TextStyle(color: Colors.grey),
@@ -56,7 +74,7 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.white),
                       ),
                     ),
@@ -97,7 +115,7 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            focusedBorder: OutlineInputBorder(
+                            focusedBorder: const OutlineInputBorder(
                               borderSide: BorderSide(color: Colors.white),
                             ),
                           ),
@@ -155,20 +173,19 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
                         );
                       },
                     ),
-
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
                       if (titleController.text.trim().isEmpty) return;
 
-                      final newSub = SubTask(
+                      final updatedSubtask = SubTask(
                         title: titleController.text.trim(),
                         priority: priority,
                         steps: steps,
-                        completed: false,
+                        completed: widget.existingSubTask?.completed ?? false,
                       );
 
-                      widget.onSubtaskAdded(newSub);
+                      widget.onSubtaskSaved(updatedSubtask);
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
@@ -176,8 +193,10 @@ class _AddSubTaskSheetState extends State<AddSubTaskSheet> {
                       minimumSize: const Size(double.infinity, 48),
                     ),
                     child: Text(
-                      'Add Subtask',
-                      style: TextStyle(color: Colors.black),
+                      widget.existingSubTask != null
+                          ? 'Save Changes'
+                          : 'Add Subtask',
+                      style: const TextStyle(color: Colors.black),
                     ),
                   ),
                 ],

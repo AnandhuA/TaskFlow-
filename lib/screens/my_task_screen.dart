@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:task_flow/core/helper_funtions.dart';
 import 'package:task_flow/data/hive_repo.dart';
 import 'package:task_flow/models/task_model.dart';
 import 'package:task_flow/screens/view_task_screen.dart';
 
 class MyTaskScreen extends StatelessWidget {
-  const MyTaskScreen({super.key});
+  MyTaskScreen({super.key});
+  final hiveRepo = HiveRepo();
+  bool _isAllCompleted(TaskPlan task) {
+    return task.subtasks.isNotEmpty &&
+        task.subtasks.every((subtask) => subtask.completed);
+  }
+
+  String _completedStatusText(TaskPlan task) {
+    final total = task.subtasks.length;
+    final completed = task.subtasks.where((s) => s.completed).length;
+
+    return total == 0
+        ? "No subtasks"
+        : "$completed of $total subtasks completed";
+  }
 
   @override
   Widget build(BuildContext context) {
-    final hiveRepo = HiveRepo();
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -39,6 +52,12 @@ class MyTaskScreen extends StatelessWidget {
                 color: Colors.grey[850],
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
+                  leading: _isAllCompleted(task)
+                      ? const Icon(Icons.check_circle, color: Colors.green)
+                      : const Icon(
+                          Icons.radio_button_unchecked,
+                          color: Colors.grey,
+                        ),
                   title: Text(
                     task.title,
                     style: const TextStyle(color: Colors.white),
@@ -47,11 +66,11 @@ class MyTaskScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Subtasks: ${task.subtasks.length}",
+                        _completedStatusText(task),
                         style: const TextStyle(color: Colors.grey),
                       ),
                       Text(
-                        "Saved on: ${task.createdAt}",
+                        "Saved on: ${formatDate(task.createdAt ?? DateTime.now())}",
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 12,

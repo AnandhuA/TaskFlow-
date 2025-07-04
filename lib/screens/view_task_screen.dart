@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:task_flow/data/hive_repo.dart';
 import 'package:task_flow/models/task_model.dart';
-import 'package:task_flow/widgets/bottom_sheet.dart';
+import 'package:task_flow/widgets/add_sub_task_bottom_sheet.dart';
 
 class ViewTaskScreen extends StatefulWidget {
   final TaskPlan task;
@@ -74,13 +74,13 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
-                builder: (context) => AddSubTaskSheet(
-                  onSubtaskAdded: (subtask) async {
+                builder: (_) => AddSubTaskSheet(
+                  onSubtaskSaved: (subtask) {
                     setState(() {
                       subtasks.insert(0, subtask);
                       _expandedStates.insert(0, false);
                     });
-                    await _updateTaskInHive();
+                    _updateTaskInHive();
                   },
                 ),
               );
@@ -148,6 +148,7 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        decorationThickness: 2,
                         decoration: sub.completed
                             ? TextDecoration.lineThrough
                             : null,
@@ -166,6 +167,34 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
                         _expandedStates[index] = !_expandedStates[index];
                       });
                     },
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.white),
+                    color: Colors.grey[900],
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => AddSubTaskSheet(
+                            existingSubTask: subtasks[index],
+                            onSubtaskSaved: (updatedSubtask) {
+                              setState(() {
+                                subtasks[index] = updatedSubtask;
+                              });
+                              _updateTaskInHive();
+                            },
+                          ),
+                        );
+                      } else if (value == 'delete') {
+                        _confirmDeleteSubtask(context, index);
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'edit', child: Text("Edit")),
+                      PopupMenuItem(value: 'delete', child: Text("Delete")),
+                    ],
                   ),
                 ],
               ),
@@ -187,6 +216,7 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
                             '- $step',
                             style: TextStyle(
                               color: Colors.white70,
+                              decorationThickness: 1,
                               decoration: sub.completed
                                   ? TextDecoration.lineThrough
                                   : null,
@@ -199,6 +229,41 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmDeleteSubtask(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          "Delete Subtask",
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          "Are you sure you want to delete this subtask?",
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              setState(() {
+                subtasks.removeAt(index);
+                _expandedStates.removeAt(index);
+              });
+              await _updateTaskInHive();
+              Navigator.pop(context);
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

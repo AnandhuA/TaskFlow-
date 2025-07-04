@@ -47,7 +47,7 @@ class _MainScreenState extends State<MainScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children: const [MyTaskScreen(), AddTask(), AddTaskGptScreen()],
+        children:  [MyTaskScreen(), AddTask(), AddTaskGptScreen()],
       ),
       bottomNavigationBar: Container(
         color: Colors.black,
