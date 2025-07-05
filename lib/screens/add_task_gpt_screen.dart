@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
-import 'package:task_flow/bloc/chat/chat_cubit.dart';
+import 'package:task_flow/bloc/chatGpt/chat_gpt_cubit.dart';
 import 'package:task_flow/screens/result_screen.dart';
 
 class AddTaskGptScreen extends StatefulWidget {
@@ -52,10 +52,10 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
               ),
             ),
             const SizedBox(height: 15),
-            BlocConsumer<ChatCubit, ChatState>(
+            BlocConsumer<ChatGptCubit, ChatGptState>(
               listener: (context, state) {
                 //---------- chat loaded state ----------------
-                if (state is ChatLoadedState) {
+                if (state is ChatGptLoadedState) {
                   if (state.resultModel.taskPlan != null) {
                     _taskController.clear();
                     Navigator.push(
@@ -80,7 +80,7 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
                   }
                 }
                 // ------------ chat error state -------------
-                else if (state is ChatErrorState) {
+                else if (state is ChatGptErrorState) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       duration: Duration(milliseconds: 500),
@@ -94,7 +94,7 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
                 }
               },
               builder: (context, state) {
-                if (state is ChatLoadingState) {
+                if (state is ChatGptLoadingState) {
                   return TextButton(
                     onPressed: () {},
                     style: TextButton.styleFrom(
@@ -114,7 +114,7 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
                 return TextButton(
                   onPressed: () {
                     if (_taskController.text.isNotEmpty) {
-                      context.read<ChatCubit>().chatButtonClick(
+                      context.read<ChatGptCubit>().chatButtonClick(
                         task: _taskController.text,
                       );
                     } else {

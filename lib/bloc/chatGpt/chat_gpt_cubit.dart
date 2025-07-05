@@ -2,31 +2,31 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:task_flow/data/chat_repo.dart';
+import 'package:task_flow/data/chat_gpt_repo.dart';
 import 'package:task_flow/models/task_model.dart';
 import 'package:task_flow/utils/parser.dart';
 
-part 'chat_state.dart';
+part 'chat_gpt_state.dart';
 
-class ChatCubit extends Cubit<ChatState> {
-  ChatCubit() : super(ChatInitial());
+class ChatGptCubit extends Cubit<ChatGptState> {
+  ChatGptCubit() : super(ChatGptInitial());
 
-  final ChatRepo _repo = ChatRepo();
+  final ChatGptRepo _repo = ChatGptRepo();
 
   void chatButtonClick({required String task}) async {
-    emit(ChatLoadingState());
+    emit(ChatGptLoadingState());
     try {
       final result = await _repo.generateSubTasks(task);
       log(result);
       final TaskPlan taskPlan = parseAiResponse(result);
       return emit(
-        ChatLoadedState(
+        ChatGptLoadedState(
           resultModel: ResultModel(taskPlan: taskPlan, errorMessage: "Success"),
         ),
       );
     } catch (e) {
       log(e.toString());
-      return emit(ChatErrorState(resultModel: ResultModel(errorMessage: "$e")));
+      return emit(ChatGptErrorState(resultModel: ResultModel(errorMessage: "$e")));
     }
   }
 }

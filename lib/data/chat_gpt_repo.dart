@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:task_flow/core/key.dart';
 import 'package:task_flow/core/urls.dart';
 
-class ChatRepo {
+class ChatGptRepo {
   Future<String> generateSubTasks(String task) async {
     try {
       final response = await http.post(

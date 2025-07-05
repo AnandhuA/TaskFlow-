@@ -52,12 +52,13 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
     await HiveRepo().updateTask(widget.task.id, updatedTask);
   }
 
-  void _onReorder(int oldIndex, int newIndex) {
+  void _onReorder(int oldIndex, int newIndex) async {
     setState(() {
       if (newIndex > oldIndex) newIndex -= 1;
       final item = subtasks.removeAt(oldIndex);
       subtasks.insert(newIndex, item);
     });
+    await _updateTaskInHive();
   }
 
   @override
