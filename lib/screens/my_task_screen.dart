@@ -15,13 +15,20 @@ class MyTaskScreen extends StatelessWidget {
         task.subtasks.every((subtask) => subtask.completed);
   }
 
-  String _completedStatusText(TaskPlan task) {
+  String _completedStatusText(TaskPlan task, double progress) {
     final total = task.subtasks.length;
     final completed = task.subtasks.where((s) => s.completed).length;
 
     return total == 0
         ? "No subtasks"
-        : "$completed of $total subtasks completed";
+        : "$completed of $total subtasks completed    ${(progress * 100).toInt()}%";
+  }
+
+  double _calculateProgress(TaskPlan task) {
+    final total = task.subtasks.length;
+    if (total == 0) return 0;
+    final completed = task.subtasks.where((s) => s.completed).length;
+    return completed / total;
   }
 
   @override
@@ -78,6 +85,7 @@ class MyTaskScreen extends StatelessWidget {
             itemCount: tasks.length,
             itemBuilder: (context, index) {
               final task = tasks[index];
+              final progress = _calculateProgress(task);
               return Card(
                 color: Colors.grey[850],
                 margin: const EdgeInsets.all(10),
@@ -96,9 +104,24 @@ class MyTaskScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _completedStatusText(task),
-                        style: const TextStyle(color: Colors.grey),
+                        _completedStatusText(task, progress),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
                       ),
+                      SizedBox(height: 5),
+                      LinearProgressIndicator(
+                        value: progress,
+
+                        minHeight: 3,
+                        borderRadius: BorderRadius.circular(10),
+                        backgroundColor: Colors.grey[700],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.green.shade500,
+                        ),
+                      ),
+                      SizedBox(height: 5),
                       Text(
                         "Saved on: ${formatDate(task.createdAt ?? DateTime.now())}",
                         style: const TextStyle(

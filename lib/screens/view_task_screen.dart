@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:task_flow/data/hive_repo.dart';
 import 'package:task_flow/models/task_model.dart';
 import 'package:task_flow/widgets/add_sub_task_bottom_sheet.dart';
+import 'package:task_flow/widgets/task_progress_card.dart';
 
 class ViewTaskScreen extends StatefulWidget {
   final TaskPlan task;
@@ -17,6 +18,9 @@ class ViewTaskScreen extends StatefulWidget {
 class _ViewTaskScreenState extends State<ViewTaskScreen> {
   late List<SubTask> subtasks;
   late List<bool> _expandedStates;
+  late int pendingCount;
+  late int completedCount;
+  late int total;
 
   @override
   void initState() {
@@ -33,6 +37,13 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
         .toList();
     _sortSubtasks();
     _expandedStates = List.generate(subtasks.length, (_) => false);
+    _findCount();
+  }
+
+  void _findCount() {
+    completedCount = subtasks.where((t) => t.completed).length;
+    pendingCount = subtasks.where((t) => !t.completed).length;
+    total = subtasks.length;
   }
 
   void _sortSubtasks() {
@@ -80,6 +91,7 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
                     setState(() {
                       subtasks.insert(0, subtask);
                       _expandedStates.insert(0, false);
+                      _findCount();
                     });
                     _updateTaskInHive();
                   },
@@ -101,14 +113,22 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ReorderableListView.builder(
-          itemCount: subtasks.length,
-          onReorder: _onReorder,
-          buildDefaultDragHandles: true,
-          itemBuilder: (context, index) {
-            final sub = subtasks[index];
-            return card(sub: sub, index: index);
-          },
+        child: Column(
+          children: [
+            TaskProgressCard(completed: completedCount, total: total),
+            SizedBox(height: 15),
+            Expanded(
+              child: ReorderableListView.builder(
+                itemCount: subtasks.length,
+                onReorder: _onReorder,
+                buildDefaultDragHandles: true,
+                itemBuilder: (context, index) {
+                  final sub = subtasks[index];
+                  return card(sub: sub, index: index);
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -123,6 +143,7 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
         onTap: () async {
           setState(() {
             sub.completed = !sub.completed;
+            _findCount();
           });
           await _updateTaskInHive();
         },
@@ -137,6 +158,7 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
                     onChanged: (val) async {
                       setState(() {
                         sub.completed = val ?? false;
+                        _findCount();
                       });
                       await _updateTaskInHive();
                     },
@@ -259,6 +281,7 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
               setState(() {
                 subtasks.removeAt(index);
                 _expandedStates.removeAt(index);
+                _findCount();
               });
               await _updateTaskInHive();
               Navigator.pop(context);

@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 publish_to: 'none'
 
-version: 1.0.1+1
+version: 1.0.2
 
 environment:
   sdk: ^3.8.1
@@ -21,6 +21,7 @@ dependencies:
   google_nav_bar: ^5.0.7
   uuid: ^4.5.1
   intl: ^0.20.2
+  percent_indicator: ^4.2.5
 
 
 dev_dependencies:
