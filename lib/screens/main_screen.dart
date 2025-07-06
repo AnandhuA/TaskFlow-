@@ -3,6 +3,7 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:task_flow/screens/add_task.dart';
 import 'package:task_flow/screens/add_task_gpt_screen.dart';
 import 'package:task_flow/screens/my_task_screen.dart';
+import 'package:task_flow/screens/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -47,7 +48,12 @@ class _MainScreenState extends State<MainScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children: [MyTaskScreen(), AddTask(), AddTaskGptScreen()],
+        children: [
+          MyTaskScreen(onAddTask: () => _onTabChanged(1)),
+          AddTask(onAddTask: () => _onTabChanged(0)),
+          AddTaskGptScreen(onReturnToMyTasks: () => _onTabChanged(0)),
+          SettingsScreen(),
+        ],
       ),
       bottomNavigationBar: Container(
         color: Colors.black,
@@ -65,6 +71,7 @@ class _MainScreenState extends State<MainScreen> {
             GButton(icon: Icons.task_alt, text: 'My Tasks'),
             GButton(icon: Icons.add_circle_outline_sharp, text: 'Add Task'),
             GButton(icon: Icons.gpp_good_outlined, text: 'Gpt'),
+            // GButton(icon: Icons.settings, text: 'Settings'),
           ],
         ),
       ),

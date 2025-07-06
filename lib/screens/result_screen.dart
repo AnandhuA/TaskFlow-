@@ -4,8 +4,14 @@ import 'package:task_flow/models/task_model.dart';
 import 'package:uuid/uuid.dart';
 
 class ResultScreen extends StatefulWidget {
+  final VoidCallback onSaveAndReturn;
+
   final TaskPlan parsedTask;
-  const ResultScreen({super.key, required this.parsedTask});
+  const ResultScreen({
+    super.key,
+    required this.parsedTask,
+    required this.onSaveAndReturn,
+  });
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -53,7 +59,7 @@ class _ResultScreenState extends State<ResultScreen> {
     );
 
     await HiveRepo().saveTask(taskToSave);
-
+    widget.onSaveAndReturn();
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

@@ -5,7 +5,8 @@ import 'package:task_flow/bloc/chatGpt/chat_gpt_cubit.dart';
 import 'package:task_flow/screens/result_screen.dart';
 
 class AddTaskGptScreen extends StatefulWidget {
-  const AddTaskGptScreen({super.key});
+  final VoidCallback onReturnToMyTasks;
+  const AddTaskGptScreen({super.key, required this.onReturnToMyTasks});
 
   @override
   State<AddTaskGptScreen> createState() => _AddTaskGptScreenState();
@@ -63,6 +64,7 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
                       MaterialPageRoute(
                         builder: (context) => ResultScreen(
                           parsedTask: state.resultModel.taskPlan!,
+                          onSaveAndReturn: widget.onReturnToMyTasks,
                         ),
                       ),
                     );

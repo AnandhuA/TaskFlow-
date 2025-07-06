@@ -4,7 +4,8 @@ import 'package:task_flow/data/hive_repo.dart';
 import 'package:uuid/uuid.dart';
 
 class AddTask extends StatefulWidget {
-  const AddTask({super.key});
+  final VoidCallback onAddTask;
+  const AddTask({super.key, required this.onAddTask});
 
   @override
   State<AddTask> createState() => _AddTaskState();
@@ -72,10 +73,8 @@ class _AddTaskState extends State<AddTask> {
     taskTitleController.clear();
     subTitleController.clear();
     stepController.clear();
+    widget.onAddTask();
 
-    setState(() {
-      subtasks = [];
-    });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Task added successfully!"),

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:lottie/lottie.dart';
 import 'package:task_flow/core/helper_funtions.dart';
 import 'package:task_flow/data/hive_repo.dart';
 import 'package:task_flow/models/task_model.dart';
 import 'package:task_flow/screens/view_task_screen.dart';
 
 class MyTaskScreen extends StatelessWidget {
-  MyTaskScreen({super.key});
+  final VoidCallback onAddTask;
+  MyTaskScreen({super.key, required this.onAddTask});
   final hiveRepo = HiveRepo();
   bool _isAllCompleted(TaskPlan task) {
     return task.subtasks.isNotEmpty &&
@@ -36,10 +38,38 @@ class MyTaskScreen extends StatelessWidget {
           final tasks = hiveRepo.getAllTasks().reversed.toList();
 
           if (tasks.isEmpty) {
-            return const Center(
-              child: Text(
-                "No tasks found",
-                style: TextStyle(color: Colors.white),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("No Task Found", style: TextStyle(color: Colors.white)),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Lottie.asset(
+                        "assets/animations/arrow_white.json",
+                        height: 150,
+                      ),
+                      Positioned(
+                        bottom: 60, // adjust as needed
+                        child: TextButton(
+                          onPressed: onAddTask,
+                          style: TextButton.styleFrom(
+                            minimumSize: Size(100, 40),
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          ),
+                          child: Text(
+                            "Add Task",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             );
           }
@@ -99,8 +129,18 @@ class MyTaskScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => ViewTaskScreen(task: task),
+                      PageRouteBuilder(
+                        transitionDuration: Duration(milliseconds: 300),
+                        pageBuilder: (_, __, ___) => ViewTaskScreen(task: task),
+                        transitionsBuilder: (_, animation, __, child) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: Offset(-1.0, 0.0),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          );
+                        },
                       ),
                     );
                   },
