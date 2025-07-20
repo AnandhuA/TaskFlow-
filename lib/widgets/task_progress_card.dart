@@ -15,9 +15,8 @@ class TaskProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final percent = total == 0 ? 0.0 : completed / total;
     double progress = total == 0 ? 0 : completed / total;
-    final maxHeight = 30.0; // max height for 100% progress
+    final maxHeight = 30.0;
     final barHeights = List.generate(15, (index) {
-      // Give each bar a base variation + scale by progress
       final base = [10, 14, 22, 18, 26, 20, 14, 12, 18, 22, 16, 10, 13, 14, 16];
       return (base[index] * progress).clamp(4.0, maxHeight);
     });

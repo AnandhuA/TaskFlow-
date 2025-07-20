@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:task_flow/bloc/chatGpt/chat_gpt_cubit.dart';
 import 'package:task_flow/screens/result_screen.dart';
 
@@ -14,11 +15,25 @@ class AddTaskGptScreen extends StatefulWidget {
 
 class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
   final TextEditingController _taskController = TextEditingController();
+  String _version = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
 
   @override
   void dispose() {
     super.dispose();
     _taskController.dispose();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = "v${info.version}";
+    });
   }
 
   @override
@@ -34,6 +49,7 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Spacer(),
             TextField(
               controller: _taskController,
               minLines: 1,
@@ -57,13 +73,14 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
               listener: (context, state) {
                 //---------- chat loaded state ----------------
                 if (state is ChatGptLoadedState) {
-                  if (state.resultModel.taskPlan != null) {
+                  if (state.resultModel.taskList != null &&
+                      state.resultModel.taskList!.isNotEmpty) {
                     _taskController.clear();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ResultScreen(
-                          parsedTask: state.resultModel.taskPlan!,
+                          parsedTask: state.resultModel.taskList!.first,
                           onSaveAndReturn: widget.onReturnToMyTasks,
                         ),
                       ),
@@ -87,7 +104,7 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
                     SnackBar(
                       duration: Duration(milliseconds: 500),
                       content: Text(
-                        state.resultModel.errorMessage,
+                        state.resultModel.message,
                         style: TextStyle(color: Colors.white),
                       ),
                       backgroundColor: Colors.red,
@@ -144,6 +161,11 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
               },
             ),
             const SizedBox(height: 16),
+            Spacer(),
+            Text(
+              _version,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+            ),
           ],
         ),
       ),

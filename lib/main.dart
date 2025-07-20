@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:task_flow/bloc/chatGpt/chat_gpt_cubit.dart';
+import 'package:task_flow/bloc/taskBloc/task_bloc.dart';
 import 'package:task_flow/models/task_model.dart';
 import 'package:task_flow/screens/main_screen.dart';
 
@@ -21,7 +22,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [BlocProvider(create: (context) => ChatGptCubit())],
+      providers: [
+        BlocProvider(create: (context) => ChatGptCubit()),
+        BlocProvider(create: (context) => TaskBloc()..add(InitialEventEvent())),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: MainScreen(),

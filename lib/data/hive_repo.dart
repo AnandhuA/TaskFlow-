@@ -12,8 +12,9 @@ class HiveRepo {
     }
   }
 
-  Future<void> saveTask(TaskPlan taskPlan) async {
+  Future<List<TaskPlan>> saveTask(TaskPlan taskPlan) async {
     await _taskBox.put(taskPlan.id, taskPlan);
+     return _taskBox.values.toList();
   }
 
   List<TaskPlan> getAllTasks() {
@@ -24,12 +25,14 @@ class HiveRepo {
     return _taskBox.get(id);
   }
 
-  Future<void> updateTask(String id, TaskPlan updatedTask) async {
+  Future<List<TaskPlan>> updateTask(String id, TaskPlan updatedTask) async {
     await _taskBox.put(id, updatedTask);
+    return _taskBox.values.toList();
   }
 
-  Future<void> deleteTask(String id) async {
+  Future<List<TaskPlan>> deleteTask(String id) async {
     await _taskBox.delete(id);
+    return _taskBox.values.toList();
   }
 
   Future<void> clearAll() async {

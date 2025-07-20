@@ -21,12 +21,12 @@ class ChatGptCubit extends Cubit<ChatGptState> {
       final TaskPlan taskPlan = parseAiResponse(result);
       return emit(
         ChatGptLoadedState(
-          resultModel: ResultModel(taskPlan: taskPlan, errorMessage: "Success"),
+          resultModel: ResultModel(taskList: [taskPlan], message: "Success"),
         ),
       );
     } catch (e) {
       log(e.toString());
-      return emit(ChatGptErrorState(resultModel: ResultModel(errorMessage: "$e")));
+      return emit(ChatGptErrorState(resultModel: ResultModel(message: "$e")));
     }
   }
 }

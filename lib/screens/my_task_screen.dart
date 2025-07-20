@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+import 'package:task_flow/bloc/taskBloc/task_bloc.dart';
 import 'package:task_flow/core/helper_funtions.dart';
 import 'package:task_flow/data/hive_repo.dart';
 import 'package:task_flow/models/task_model.dart';
@@ -39,138 +40,165 @@ class MyTaskScreen extends StatelessWidget {
         backgroundColor: Colors.black,
         title: const Text("My Tasks"),
       ),
-      body: ValueListenableBuilder<Box<TaskPlan>>(
-        valueListenable: Hive.box<TaskPlan>('taskPlans').listenable(),
-        builder: (context, box, _) {
-          final tasks = hiveRepo.getAllTasks().reversed.toList();
-
-          if (tasks.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("No Task Found", style: TextStyle(color: Colors.white)),
-                  Stack(
-                    alignment: Alignment.center,
+      body: BlocBuilder<TaskBloc, TaskState>(
+        builder: (context, state) {
+          //----- task loading ------
+          if (state is TaskLoadingState) {
+            return Center(child: CircularProgressIndicator());
+          }
+          // --------- task error ----------
+          else if (state is TaskErrorState) {
+            return Center(child: Text(state.error));
+          }
+          //-------- task success ---------
+          else if (state is TaskSuccessState) {
+            final List<TaskPlan>? tasks = state.resultModel.taskList;
+            if (tasks != null) {
+              if (tasks.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Lottie.asset(
-                        "assets/animations/arrow_white.json",
-                        height: 150,
+                      Text(
+                        "No Task Found",
+                        style: TextStyle(color: Colors.white),
                       ),
-                      Positioned(
-                        bottom: 60, // adjust as needed
-                        child: TextButton(
-                          onPressed: onAddTask,
-                          style: TextButton.styleFrom(
-                            minimumSize: Size(100, 40),
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Lottie.asset(
+                            "assets/animations/arrow_white.json",
+                            height: 150,
+                          ),
+                          Positioned(
+                            bottom: 60, // adjust as needed
+                            child: TextButton(
+                              onPressed: onAddTask,
+                              style: TextButton.styleFrom(
+                                minimumSize: Size(100, 40),
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                              ),
+                              child: Text(
+                                "Add Task",
+                                style: TextStyle(color: Colors.black),
+                              ),
                             ),
                           ),
-                          child: Text(
-                            "Add Task",
-                            style: TextStyle(color: Colors.black),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                return ListView.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    final progress = _calculateProgress(task);
+                    return Card(
+                      color: Colors.grey[850],
+                      margin: const EdgeInsets.all(10),
+                      child: ListTile(
+                        leading: _isAllCompleted(task)
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              )
+                            : const Icon(
+                                Icons.radio_button_unchecked,
+                                color: Colors.grey,
+                              ),
+                        title: Text(
+                          task.title,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _completedStatusText(task, progress),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            LinearProgressIndicator(
+                              value: progress,
+
+                              minHeight: 3,
+                              borderRadius: BorderRadius.circular(10),
+                              backgroundColor: Colors.grey[700],
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.green.shade500,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              "Saved on: ${formatDate(task.createdAt ?? DateTime.now())}",
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _showEditTitleDialog(context, task);
+                            } else if (value == 'delete') {
+                              _confirmDelete(context, task);
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.more_vert,
+                            color: Colors.white,
                           ),
+                          color: Colors.grey[900],
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Text("Edit"),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Text("Delete"),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            itemCount: tasks.length,
-            itemBuilder: (context, index) {
-              final task = tasks[index];
-              final progress = _calculateProgress(task);
-              return Card(
-                color: Colors.grey[850],
-                margin: const EdgeInsets.all(10),
-                child: ListTile(
-                  leading: _isAllCompleted(task)
-                      ? const Icon(Icons.check_circle, color: Colors.green)
-                      : const Icon(
-                          Icons.radio_button_unchecked,
-                          color: Colors.grey,
-                        ),
-                  title: Text(
-                    task.title,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _completedStatusText(task, progress),
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      LinearProgressIndicator(
-                        value: progress,
-
-                        minHeight: 3,
-                        borderRadius: BorderRadius.circular(10),
-                        backgroundColor: Colors.grey[700],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.green.shade500,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        "Saved on: ${formatDate(task.createdAt ?? DateTime.now())}",
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        _showEditTitleDialog(context, task);
-                      } else if (value == 'delete') {
-                        _confirmDelete(context, task);
-                      }
-                    },
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                    color: Colors.grey[900],
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'edit', child: Text("Edit")),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text("Delete"),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        transitionDuration: Duration(milliseconds: 300),
-                        pageBuilder: (_, __, ___) => ViewTaskScreen(task: task),
-                        transitionsBuilder: (_, animation, __, child) {
-                          return SlideTransition(
-                            position: Tween<Offset>(
-                              begin: Offset(-1.0, 0.0),
-                              end: Offset.zero,
-                            ).animate(animation),
-                            child: child,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              transitionDuration: Duration(milliseconds: 300),
+                              pageBuilder: (_, _, _) =>
+                                  ViewTaskScreen(task: task),
+                              transitionsBuilder: (_, animation, _, child) {
+                                return SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: Offset(-1.0, 0.0),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                );
+                              },
+                            ),
                           );
                         },
                       ),
                     );
                   },
-                ),
-              );
-            },
-          );
+                );
+              }
+            } else {
+              return Center(child: Text("Task null :$tasks"));
+            }
+          }
+          return Center(child: Text("Unknown State:: $state"));
         },
       ),
     );
@@ -199,16 +227,18 @@ class MyTaskScreen extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-            onPressed: () async {
+            onPressed: () {
               final newTitle = controller.text.trim();
               if (newTitle.isNotEmpty) {
-                final updated = TaskPlan(
+                final updatedTask = TaskPlan(
                   id: task.id,
                   title: newTitle,
                   subtasks: task.subtasks,
                   createdAt: task.createdAt,
                 );
-                await HiveRepo().updateTask(task.id, updated);
+                context.read<TaskBloc>().add(
+                  UpdateTaskEvent(updatedTask: updatedTask, taskId: task.id),
+                );
                 Navigator.pop(context);
               }
             },
@@ -236,8 +266,8 @@ class MyTaskScreen extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              await HiveRepo().deleteTask(task.id);
+            onPressed: () {
+              context.read<TaskBloc>().add(DeleteTaskEvent(taskId: task.id));
               Navigator.pop(context);
             },
             child: const Text("Delete", style: TextStyle(color: Colors.white)),

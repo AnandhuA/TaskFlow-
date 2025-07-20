@@ -3,7 +3,6 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:task_flow/screens/add_task.dart';
 import 'package:task_flow/screens/add_task_gpt_screen.dart';
 import 'package:task_flow/screens/my_task_screen.dart';
-import 'package:task_flow/screens/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -52,7 +51,7 @@ class _MainScreenState extends State<MainScreen> {
           MyTaskScreen(onAddTask: () => _onTabChanged(1)),
           AddTask(onAddTask: () => _onTabChanged(0)),
           AddTaskGptScreen(onReturnToMyTasks: () => _onTabChanged(0)),
-          SettingsScreen(),
+          // SettingsScreen(),
         ],
       ),
       bottomNavigationBar: Container(
