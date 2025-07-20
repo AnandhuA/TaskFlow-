@@ -2,14 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:task_flow/bloc/taskBloc/task_bloc.dart';
+import 'package:task_flow/models/duration_adapter.dart';
 import 'package:task_flow/models/task_model.dart';
 import 'package:task_flow/screens/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  Hive.registerAdapter(TaskPlanAdapter());
-  Hive.registerAdapter(SubTaskAdapter());
+  if (!Hive.isAdapterRegistered(100)) {
+    Hive.registerAdapter(DurationAdapter()); 
+  }
+
+  if (!Hive.isAdapterRegistered(0)) {
+    Hive.registerAdapter(TaskPlanAdapter()); 
+  }
+
+  if (!Hive.isAdapterRegistered(1)) {
+    Hive.registerAdapter(SubTaskAdapter()); 
+  }
+
   await Hive.openBox<TaskPlan>('taskPlans');
   await Hive.openBox<List>('taskOrder');
   runApp(const MyApp());

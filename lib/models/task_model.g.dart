@@ -64,13 +64,15 @@ class SubTaskAdapter extends TypeAdapter<SubTask> {
       priority: fields[1] as String,
       steps: (fields[2] as List).cast<String>(),
       completed: fields[3] as bool,
+      timeTaken: fields[4] as Duration,
+      breakTaken: fields[5] as Duration,
     );
   }
 
   @override
   void write(BinaryWriter writer, SubTask obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -78,7 +80,11 @@ class SubTaskAdapter extends TypeAdapter<SubTask> {
       ..writeByte(2)
       ..write(obj.steps)
       ..writeByte(3)
-      ..write(obj.completed);
+      ..write(obj.completed)
+      ..writeByte(4)
+      ..write(obj.timeTaken)
+      ..writeByte(5)
+      ..write(obj.breakTaken);
   }
 
   @override

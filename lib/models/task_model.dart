@@ -58,11 +58,19 @@ class SubTask {
   @HiveField(3)
   bool completed;
 
+   @HiveField(4)
+  Duration timeTaken; 
+
+  @HiveField(5)
+  Duration breakTaken; 
+
   SubTask({
     required this.title,
     required this.priority,
     required this.steps,
     this.completed = false,
+    this.timeTaken = Duration.zero,
+    this.breakTaken = Duration.zero,
   });
 }
 class SubTaskWrapper {

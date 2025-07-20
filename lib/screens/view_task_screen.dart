@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_flow/bloc/taskBloc/task_bloc.dart';
 import 'package:task_flow/models/task_model.dart';
@@ -20,6 +23,14 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
   late int pendingCount;
   late int completedCount;
   late int total;
+  SubTask? _activeSubTask;
+  final Stopwatch _taskStopwatch = Stopwatch();
+  final Stopwatch _breakStopwatch = Stopwatch();
+  late final Ticker _ticker;
+  Duration _taskElapsed = Duration.zero;
+  Duration _breakElapsed = Duration.zero;
+  bool _isRunning = false;
+  bool _isOnBreak = false;
 
   @override
   void initState() {
@@ -31,12 +42,28 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
             priority: e.priority,
             steps: e.steps,
             completed: e.completed,
+            breakTaken: e.breakTaken,
           ),
         )
         .toList();
     _sortSubtasks();
     _expandedStates = List.generate(subtasks.length, (_) => false);
     _findCount();
+    _ticker = Ticker((_) {
+      if (_taskStopwatch.isRunning) {
+        setState(() => _taskElapsed = _taskStopwatch.elapsed);
+      }
+      if (_breakStopwatch.isRunning) {
+        setState(() => _breakElapsed = _breakStopwatch.elapsed);
+      }
+    });
+    _ticker.start();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
   }
 
   void _findCount() {
@@ -73,6 +100,53 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
     await _updateTaskInHive();
   }
 
+  void _resetAll() {
+    _taskStopwatch
+      ..stop()
+      ..reset();
+    _breakStopwatch
+      ..stop()
+      ..reset();
+    _taskElapsed = Duration.zero;
+    _breakElapsed = Duration.zero;
+  }
+
+  void _toggleTimer() {
+    if (_activeSubTask != null && !_activeSubTask!.completed) {
+      setState(() {
+        if (_isRunning) {
+          // Pausing work, starting break (do NOT reset)
+          _taskStopwatch.stop();
+          if (!_breakStopwatch.isRunning) _breakStopwatch.start();
+          _isRunning = false;
+          _isOnBreak = true;
+        } else {
+          // Resuming work, pausing break (do NOT reset)
+          _breakStopwatch.stop();
+          _taskStopwatch.start();
+          _isRunning = true;
+          _isOnBreak = false;
+        }
+      });
+    }
+  }
+
+  void _selectSubtask(SubTask sub) {
+    if (!sub.completed) {
+      setState(() {
+        if (_activeSubTask?.title != sub.title) {
+          _resetAll(); // resets both timers
+          _activeSubTask = sub;
+          _taskStopwatch.start();
+          _isRunning = true;
+          _isOnBreak = false;
+        } else {
+          _toggleTimer();
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -103,7 +177,7 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
               minimumSize: Size(70, 40),
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadiusGeometry.circular(5),
+                borderRadius: BorderRadius.circular(5),
               ),
             ),
             icon: Icon(Icons.add, color: Colors.black),
@@ -116,7 +190,41 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TaskProgressCard(completed: completedCount, total: total),
+            TaskProgressCard(
+              completed: completedCount,
+              total: total,
+              selectedSubTask: _activeSubTask,
+              workElapsed:  _taskElapsed,
+              breakElapsed: _breakElapsed,
+              isRunning: _isRunning,
+              isOnBreak: _isOnBreak,
+              onToggleTimer: _toggleTimer,
+              onCompleted: () async {
+                if (_activeSubTask != null && !_activeSubTask!.completed) {
+                  setState(() {
+                    _activeSubTask!.completed = true;
+                    _findCount();
+
+                    // Stop both timers
+                    _taskStopwatch.stop();
+                    _breakStopwatch.stop();
+                    _isRunning = false;
+                    _isOnBreak = false;
+
+                    // Optionally reset durations
+                    // _taskElapsed = Duration.zero;
+                    // _breakElapsed = Duration.zero;
+                  });
+
+                  await _updateTaskInHive();
+
+                  await _updateTaskInHive();
+                } else {
+                  log("message");
+                }
+              },
+            ),
+
             SizedBox(height: 15),
             Expanded(
               child: ReorderableListView.builder(
@@ -136,123 +244,122 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
   }
 
   Widget card({required SubTask sub, required int index}) {
-    return Card(
+    return SizedBox(
       key: ValueKey(sub.title + index.toString()),
-      color: Colors.grey[900],
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: InkWell(
-        onTap: () async {
-          setState(() {
-            sub.completed = !sub.completed;
-            _findCount();
-          });
-          await _updateTaskInHive();
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListTile(
-              title: Row(
-                children: [
-                  Checkbox(
-                    value: sub.completed,
-                    onChanged: (val) async {
-                      setState(() {
-                        sub.completed = val ?? false;
-                        _findCount();
-                      });
-                      await _updateTaskInHive();
-                    },
-                    activeColor: Colors.green,
-                  ),
-                  Expanded(
-                    child: Text(
-                      sub.title,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        decorationThickness: 2,
-                        decoration: sub.completed
-                            ? TextDecoration.lineThrough
-                            : null,
-                      ),
-                    ),
-                  ),
-                  if (sub.steps.isNotEmpty)
-                    IconButton(
-                      icon: Icon(
-                        _expandedStates[index]
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        color: Colors.white,
-                      ),
-                      onPressed: () {
+      child: Card(
+        color: _activeSubTask == sub
+            ? Colors.pinkAccent.withOpacity(0.2)
+            : Colors.grey[900],
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: InkWell(
+          onTap: () => _selectSubtask(sub),
+
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                title: Row(
+                  children: [
+                    Checkbox(
+                      value: sub.completed,
+                      onChanged: (val) async {
                         setState(() {
-                          _expandedStates[index] = !_expandedStates[index];
+                          sub.completed = val ?? false;
+                          _findCount();
                         });
+                        await _updateTaskInHive();
                       },
+                      activeColor: Colors.green,
                     ),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                    color: Colors.grey[900],
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => AddSubTaskSheet(
-                            existingSubTask: subtasks[index],
-                            onSubtaskSaved: (updatedSubtask) {
-                              setState(() {
-                                subtasks[index] = updatedSubtask;
-                              });
-                              _updateTaskInHive();
-                            },
-                          ),
-                        );
-                      } else if (value == 'delete') {
-                        _confirmDeleteSubtask(context, index);
-                      }
-                    },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'edit', child: Text("Edit")),
-                      PopupMenuItem(value: 'delete', child: Text("Delete")),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            if (_expandedStates[index])
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 16.0,
-                  right: 16.0,
-                  bottom: 12,
+                    Expanded(
+                      child: Text(
+                        sub.title,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          decorationThickness: 2,
+                          decoration: sub.completed
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                      ),
+                    ),
+                    if (sub.steps.isNotEmpty)
+                      IconButton(
+                        icon: Icon(
+                          _expandedStates[index]
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _expandedStates[index] = !_expandedStates[index];
+                          });
+                        },
+                      ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, color: Colors.white),
+                      color: Colors.grey[900],
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => AddSubTaskSheet(
+                              existingSubTask: subtasks[index],
+                              onSubtaskSaved: (updatedSubtask) {
+                                setState(() {
+                                  subtasks[index] = updatedSubtask;
+                                });
+                                _updateTaskInHive();
+                              },
+                            ),
+                          );
+                        } else if (value == 'delete') {
+                          _confirmDeleteSubtask(context, index);
+                        }
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(value: 'edit', child: Text("Edit")),
+                        PopupMenuItem(value: 'delete', child: Text("Delete")),
+                      ],
+                    ),
+                  ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: sub.steps
-                      .map(
-                        (step) => Padding(
-                          padding: const EdgeInsets.only(left: 24, top: 4),
-                          child: Text(
-                            '- $step',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              decorationThickness: 1,
-                              decoration: sub.completed
-                                  ? TextDecoration.lineThrough
-                                  : null,
+              ),
+              if (_expandedStates[index])
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16.0,
+                    right: 16.0,
+                    bottom: 12,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: sub.steps
+                        .map(
+                          (step) => Padding(
+                            padding: const EdgeInsets.only(left: 24, top: 4),
+                            child: Text(
+                              '- $step',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                decorationThickness: 1,
+                                decoration: sub.completed
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                      .toList(),
+                        )
+                        .toList(),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
