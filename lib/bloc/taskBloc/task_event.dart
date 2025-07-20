@@ -19,7 +19,11 @@ class UpdateTaskEvent extends TaskEvent {
   UpdateTaskEvent({required this.updatedTask, required this.taskId});
 }
 
-class AddTaskUseAiEvent extends TaskEvent {}
+class AddTaskUseAiEvent extends TaskEvent {
+  final  String task;
+
+  AddTaskUseAiEvent({required this.task});
+}
 
 class DeleteTaskEvent extends TaskEvent {
   final String taskId;

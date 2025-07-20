@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:task_flow/bloc/chatGpt/chat_gpt_cubit.dart';
+import 'package:task_flow/bloc/taskBloc/task_bloc.dart';
 import 'package:task_flow/screens/result_screen.dart';
 
 class AddTaskGptScreen extends StatefulWidget {
@@ -69,18 +69,17 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
               ),
             ),
             const SizedBox(height: 15),
-            BlocConsumer<ChatGptCubit, ChatGptState>(
+            BlocConsumer<TaskBloc, TaskState>(
               listener: (context, state) {
                 //---------- chat loaded state ----------------
-                if (state is ChatGptLoadedState) {
-                  if (state.resultModel.taskList != null &&
-                      state.resultModel.taskList!.isNotEmpty) {
+                if (state is TaskSuccessState) {
+                  if (state.resultModel.taskList.isNotEmpty) {
                     _taskController.clear();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ResultScreen(
-                          parsedTask: state.resultModel.taskList!.first,
+                          parsedTask: state.resultModel.taskList.first,
                           onSaveAndReturn: widget.onReturnToMyTasks,
                         ),
                       ),
@@ -99,12 +98,12 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
                   }
                 }
                 // ------------ chat error state -------------
-                else if (state is ChatGptErrorState) {
+                else if (state is TaskErrorState) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       duration: Duration(milliseconds: 500),
                       content: Text(
-                        state.resultModel.message,
+                        state.error,
                         style: TextStyle(color: Colors.white),
                       ),
                       backgroundColor: Colors.red,
@@ -113,7 +112,7 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
                 }
               },
               builder: (context, state) {
-                if (state is ChatGptLoadingState) {
+                if (state is TaskLoadingState) {
                   return TextButton(
                     onPressed: () {},
                     style: TextButton.styleFrom(
@@ -133,8 +132,8 @@ class _AddTaskGptScreenState extends State<AddTaskGptScreen> {
                 return TextButton(
                   onPressed: () {
                     if (_taskController.text.isNotEmpty) {
-                      context.read<ChatGptCubit>().chatButtonClick(
-                        task: _taskController.text,
+                      context.read<TaskBloc>().add(
+                        AddTaskUseAiEvent(task: _taskController.text),
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(

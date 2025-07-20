@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_flow/data/chat_gpt_repo.dart';
 import 'package:task_flow/data/hive_repo.dart';
 import 'package:task_flow/models/task_model.dart';
+import 'package:task_flow/utils/parser.dart';
 
 part 'task_event.dart';
 part 'task_state.dart';
@@ -9,6 +11,7 @@ part 'task_state.dart';
 class TaskBloc extends Bloc<TaskEvent, TaskState> {
   final hiveRepo = HiveRepo();
   List<TaskPlan> taskList = [];
+  final ChatGptRepo _repo = ChatGptRepo();
 
   //-------- TaskIntial ------
   TaskBloc() : super(TaskInitial()) {
@@ -66,5 +69,18 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
   }
 
   // ------  add task use ai ---------
-  void _onAddTaskUseAi(AddTaskUseAiEvent event, Emitter<TaskState> emit) {}
+  void _onAddTaskUseAi(AddTaskUseAiEvent event, Emitter<TaskState> emit) async {
+    emit(TaskLoadingState());
+    try {
+      final result = await _repo.generateSubTasks(event.task);
+      final TaskPlan taskPlan = parseAiResponse(result);
+      return emit(
+        TaskSuccessState(
+          resultModel: ResultModel(taskList: [taskPlan], message: "Success"),
+        ),
+      );
+    } catch (e) {
+      return emit(TaskErrorState(error: "$e"));
+    }
+  }
 }

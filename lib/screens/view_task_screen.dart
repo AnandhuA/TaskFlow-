@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
-import 'package:task_flow/data/hive_repo.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_flow/bloc/taskBloc/task_bloc.dart';
 import 'package:task_flow/models/task_model.dart';
 import 'package:task_flow/widgets/add_sub_task_bottom_sheet.dart';
 import 'package:task_flow/widgets/task_progress_card.dart';
@@ -59,7 +59,9 @@ class _ViewTaskScreenState extends State<ViewTaskScreen> {
       subtasks: subtasks,
       createdAt: widget.task.createdAt,
     );
-    await HiveRepo().updateTask(widget.task.id, updatedTask);
+    context.read<TaskBloc>().add(
+      UpdateTaskEvent(updatedTask: updatedTask, taskId: widget.task.id),
+    );
   }
 
   void _onReorder(int oldIndex, int newIndex) async {

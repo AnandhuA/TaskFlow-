@@ -4,10 +4,10 @@ import 'package:uuid/uuid.dart';
 part 'task_model.g.dart';
 
 class ResultModel {
-  final  List<TaskPlan>? taskList;
+  final  List<TaskPlan> taskList;
   final String message;
 
-  ResultModel({this.taskList, required this.message});
+  ResultModel({required this.taskList, required this.message});
 }
 
 @HiveType(typeId: 0)

@@ -71,7 +71,7 @@ class MyTaskScreen extends StatelessWidget {
                             height: 150,
                           ),
                           Positioned(
-                            bottom: 60, // adjust as needed
+                            // adjust as needed
                             child: TextButton(
                               onPressed: onAddTask,
                               style: TextButton.styleFrom(
